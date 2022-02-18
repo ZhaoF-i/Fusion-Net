@@ -11,7 +11,7 @@ from pathlib import Path
 from criteria import *
 from dataloader import BatchDataLoader, SpeechMixDataset
 from utils.Checkpoint import Checkpoint
-from networks.CRN import NET_Wrapper
+from networks import NET_Wrapper
 from utils.progressbar import progressbar as pb
 from utils.util import makedirs, saveYAML
 

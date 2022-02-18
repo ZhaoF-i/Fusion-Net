@@ -1,10 +1,10 @@
 # experiment parameter
 SAMPLE_RATE: 16000                                                            # 采样率
-WIN_LEN: 320                                                                  # 窗长
-FFT_SIZE: 161                                                                 # fft大小
-WIN_OFFSET: 160                                                               # 窗移
+WIN_LEN: 512                                                                  # 窗长
+FFT_SIZE: 256                                                                 # fft大小
+WIN_OFFSET: 256                                                               # 窗移
 LR: 0.001                                                                     # 学习率
-MAX_EPOCH: 15                                                                 # 训练轮数
+MAX_EPOCH: 60                                                                 # 训练轮数
 EPSILON: 0.0000001                                                            #
 USE_CV: True                                                                  # [True,False]，是否使用验证集
 EVAL_STEP: 2000                                                               # 多少个batch进行一次CV
@@ -17,17 +17,15 @@ NUM_WORK: 8                                                                   # 
 
 
 # environment parameter
-project_root_path: '/home/zhaofei/PycharmProject/template'                    # 项目根目录
-WSJ0_PATH: '/data01/zhaofei/data/enhancement_data_wsj0si84/enhancement_data/long_si84_one_tr_16k.bin'         # 纯净语音文件路径
-NOISE_PATH: '/data01/zhaofei/data/enhancement_data_wsj0si84/enhancement_data/long_wav.bin'                    # 噪音文件路径
-TEST_PATH: '/data01/zhaofei/data/enhancement_data_wsj0si84/enhancement_data/TEST'                    # 测试集路径
-CONFIG_PATH: '/data01/zhaofei/config'                                # 配置文件路径
-TRAIN_LST: 'tr_si84_7S.mat'                                                      # 训练集配置文件名
-CV_LST: 'cv_si84_7S.mat'                                                         # 验证集配置文件名
+project_root_path: '/home/imu_speech1/zhaofei/Fusion_Net'                     # 项目根目录
 
-OUTPUT_DIR: '/data01/zhaofei/result/'                                          # 输出根目录
-OFFLINE_TEST_DIR: '/data_zkh/tt_result/'                                      # 本地测试数据输出路径
+TRAIN_SPEECH_LST: '/data01/zhaofei/data/Fusion_Net/train_speech.npy'          # 训练集(speech)配置文件名
+TRAIN_MIX_LST: '/data01/zhaofei/data/Fusion_Net/train_mix.npy'                # 训练集(mix)配置文件名
+CV_SPEECH_LST: '/data01/zhaofei/data/Fusion_Net/val_speech.npy'               # 验证集(speech)配置文件名
+CV_MIX_LST: '/data01/zhaofei/data/Fusion_Net/val_mix.npy'                     # 验证集(mix)配置文件名
+
+OUTPUT_DIR: '/data01/zhaofei/result/'                                         # 输出根目录
 BEST_MODEL: 'best.ckpt'                                                       # 默认最好模型名称
 MID_MODEL: 'val.ckpt'                                                         # 默认中间模型名称
 SAVE_BEST_ONLY: False                                                         # [True,False]:[仅保存最好的模型,保存中间模型]
-WORKSPACE: '/CRN'                                                             # 子项目名称
+WORKSPACE: '/Fusion_Net'                                                             # 子项目名称

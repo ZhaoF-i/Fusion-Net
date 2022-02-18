@@ -1,7 +1,6 @@
-import scipy.io as sio
 import numpy as np
 import struct
-import mmap
+import soundfile as sf
 import os
 
 from torch.nn.utils.rnn import *
@@ -12,22 +11,8 @@ from torch.utils.data import Dataset, DataLoader
 class SpeechMixDataset(Dataset):
     def __init__(self, config, mode='train'):
         self.config = config
-        lst = config['TRAIN_LST'] if mode == 'train' else config['CV_LST']
-        self.train_lst = sio.loadmat(os.path.join(config['CONFIG_PATH'], lst))
-        # noise
-        self.f = open(config['NOISE_PATH'], 'r+b')
-        self.mm = mmap.mmap(self.f.fileno(), 0)
-        # speech
-        self.f_speech = open(config['WSJ0_PATH'], 'r+b')
-        self.mm_speech = mmap.mmap(self.f_speech.fileno(), 0)
-
-        self.SNR = self.train_lst['snr'][:, 0]
-        self.SNR_len = len(self.SNR)
-        self.speech_idx = list(map(int, (list(self.train_lst['speech_idx'][:, 0]))))
-        self.noise_idx = list(map(int, (list(self.train_lst['noise_idx'][:, 0]))))
-        self.snr_idx = self.train_lst['snr_idx'][:, 0]
-        self.len = self.train_lst['num_utter'][0, 0]
-        self.SPEECH_LEN = self.train_lst['speech_len'][0, 0]
+        self.speech_lst = config['TRAIN_SPEECH_LST'] if mode == 'train' else config['CV_SPEECH_LST']
+        self.mix_lst = config['TRAIN_MIX_LST'] if mode == 'train' else config['CV_MIX_LST']
 
     def __len__(self):
         return self.len
@@ -37,31 +22,16 @@ class SpeechMixDataset(Dataset):
         return alpha
 
     def __getitem__(self, idx):
-        nframe = (self.SPEECH_LEN - self.config['WIN_LEN']) // self.config['WIN_OFFSET'] + 1
-        len_speech = (nframe + 1) * self.config['WIN_OFFSET']
-        Snr = self.SNR[self.snr_idx[idx]]
-        # noise
-        noise_loc = self.noise_idx[idx]
-        noise = np.array(list(struct.unpack('f' * len_speech, self.mm[noise_loc * 4:noise_loc * 4 + len_speech * 4])))
-        # speech
-        speech_loc = self.speech_idx[idx]
-        speech = np.array(
-            list(struct.unpack('f' * len_speech, self.mm_speech[speech_loc * 4:speech_loc * 4 + len_speech * 4])))
+        speech_wav, _ = sf.read(str(self.speech_lst[idx]))
+        alpha_pow = 1 / ((np.sqrt(np.sum(speech_wav ** 2)) / ((speech_wav.size) + 1e-7)) + 1e-7)
+        speech_wav = speech_wav * alpha_pow
 
-        speech = speech[:len_speech]
-        noise = noise[:len_speech]
-        alpha = self.mix2signal(speech, noise, Snr)
-        noise = alpha * noise
-        mixture = noise + speech
-        alpha_pow = 1 / (np.sqrt(np.sum(mixture ** 2) / len_speech) + self.config['EPSILON'])
-        speech = alpha_pow * speech
-        noise = alpha_pow * noise
-        mask_for_loss = np.ones((nframe, self.config['FFT_SIZE']), dtype=np.float32)
-        sample = (Variable(torch.FloatTensor(speech.astype('float32'))),
-                  Variable(torch.FloatTensor(noise.astype('float32'))),
-                  Variable(torch.FloatTensor(mask_for_loss)),
-                  nframe,
-                  len_speech
+        mix_wav, _ = sf.read(str(self.mix_lst[idx]))
+        alpha_pow = 1 / ((np.sqrt(np.sum(mix_wav ** 2)) / ((mix_wav.size) + 1e-7)) + 1e-7)
+        mix_wav = mix_wav * alpha_pow
+
+        sample = (Variable(torch.FloatTensor(speech_wav.astype('float32'))),
+                  Variable(torch.FloatTensor(mix_wav.astype('float32')))
                   )
 
         return sample
