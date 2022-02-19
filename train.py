@@ -11,7 +11,7 @@ from pathlib import Path
 from criteria import *
 from dataloader import BatchDataLoader, SpeechMixDataset
 from utils.Checkpoint import Checkpoint
-from networks import NET_Wrapper
+from networks.FusionNet import FusionNet
 from utils.progressbar import progressbar as pb
 from utils.util import makedirs, saveYAML
 
@@ -86,13 +86,13 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = config['CUDA_ID']
 
     # set model and optimizer
-    network = NET_Wrapper(config['WIN_LEN'], config['WIN_OFFSET'])
+    network = FusionNet()
     network = nn.DataParallel(network)
     network.cuda()
     parameters = sum(p.numel() for p in network.parameters() if p.requires_grad)
     print("Trainable parameters : " + str(parameters))
     optimizer = torch.optim.Adam(network.parameters(), lr=config['LR'], amsgrad=True)
-    lr_list = [0.0002] * 3 + [0.0001] * 6 + [0.00005] * 3 + [0.00001] * 3
+    lr_list = [0.0002] * 9 + [0.0001] * 18 + [0.00005] * 9 + [0.00001] * 24
     #  criteria,weight for each criterion
     criterion = mag_loss(config['WIN_LEN'], config['WIN_OFFSET'], loss_type='mse')
     weight = [1.]
@@ -131,8 +131,11 @@ if __name__ == '__main__':
 
             # forward + backward + optimize
             optimizer.zero_grad()
-            outputs = network(features)
-            loss = criterion(outputs, batch_info)
+            t_outp, f_outp = network(features)
+
+            t_loss = criterion(t_outp, batch_info)
+            f_loss = criterion(t_outp, batch_info)
+            loss = 0.85 * t_loss + 0.15 * f_loss
             loss.backward()
             optimizer.step()
 
@@ -142,7 +145,7 @@ if __name__ == '__main__':
 
             # display param
             cnt += 1
-            del loss, outputs, batch_info
+            # del loss, outputs, batch_info
 
             tbar.update_progress(i, 'Train', 'epoch:{}/{}, loss:{:.5f}/{:.5f}'.format(epoch + 1,
                                                                                       config['MAX_EPOCH'], running_loss,

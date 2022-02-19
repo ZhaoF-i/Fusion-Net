@@ -208,13 +208,13 @@ class F_Decoder(nn.Module):
         return f_encoder_outp
 
 
-class Fusion_net(nn.Module):
+class FusionNet(nn.Module):
     """
     一个 encoder，两个decoder
     """
 
     def __init__(self):
-        super(Fusion_net, self).__init__()
+        super(FusionNet, self).__init__()
 
         self.encoder = Encoder()
         self.t_decoder = T_Decoder()
@@ -227,13 +227,3 @@ class Fusion_net(nn.Module):
         f_decoder_outp =  self.f_decoder(encoder_outp, skip_connection)
 
         return t_decoder_outp, f_decoder_outp
-
-
-import numpy as np
-if __name__ == '__main__':
-    input = np.ones((4,1,63,512))
-    input = torch.Tensor(input)
-    fusion_net = Fusion_net()
-    out = fusion_net(input)
-
-    print(1)

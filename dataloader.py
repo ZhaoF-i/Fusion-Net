@@ -6,20 +6,20 @@ import os
 from torch.nn.utils.rnn import *
 from torch.autograd.variable import *
 from torch.utils.data import Dataset, DataLoader
+from utils.util import convert_to_frame
 
 
 class SpeechMixDataset(Dataset):
     def __init__(self, config, mode='train'):
         self.config = config
-        self.speech_lst = config['TRAIN_SPEECH_LST'] if mode == 'train' else config['CV_SPEECH_LST']
-        self.mix_lst = config['TRAIN_MIX_LST'] if mode == 'train' else config['CV_MIX_LST']
+        self.speech_path = config['TRAIN_SPEECH_LST'] if mode == 'train' else config['CV_SPEECH_LST']
+        self.mix_path = config['TRAIN_MIX_LST'] if mode == 'train' else config['CV_MIX_LST']
+
+        self.speech_lst = np.load(self.speech_path, allow_pickle=True)
+        self.mix_lst = np.load(self.mix_path, allow_pickle=True)
 
     def __len__(self):
-        return self.len
-
-    def mix2signal(self, sig1, sig2, snr):
-        alpha = np.sqrt((np.sum(sig1 ** 2) / (np.sum(sig2 ** 2) + self.config['EPSILON'])) / 10.0 ** (snr / 10.0))
-        return alpha
+        return len(self.speech_lst)
 
     def __getitem__(self, idx):
         speech_wav, _ = sf.read(str(self.speech_lst[idx]))
@@ -48,9 +48,9 @@ class BatchDataLoader(object):
     @staticmethod
     def collate_fn(batch):
         batch.sort(key=lambda x: x[0].size()[0], reverse=True)
-        speech, noise, mask_for_loss, nframe, nsample = zip(*batch)
+        speech, mix = zip(*batch)
         speech = pad_sequence(speech, batch_first=True)
-        noise = pad_sequence(noise, batch_first=True)
-        mixture = speech + noise
-        mask_for_loss = pad_sequence(mask_for_loss, batch_first=True)
-        return [mixture, speech, noise, mask_for_loss, nframe, nsample]
+        mix = pad_sequence(mix, batch_first=True)
+        mix = convert_to_frame(mix, hop_size=256, use_window=False)
+
+        return [mix, speech]

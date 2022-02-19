@@ -3,6 +3,33 @@ import os
 import re
 import torch
 from torch.autograd import Variable
+import torch.nn.functional as F
+
+
+
+def convert_to_frame(batch_wav, hop_size=256, use_window=True):
+
+    # hamming_win = torch.from_numpy(np.hamming(hop_size * 2).astype(np.float32)).reshape(1, 1, hop_size * 2)
+    frame_speech = batch_wav.reshape(batch_wav.size(0), -1, hop_size)
+    frame_speech2 = frame_speech.clone()[:, 1:]
+    frames = torch.cat([frame_speech[:, :-1], frame_speech2[:, :]], dim=-1)
+    # if use_window is True:
+    #     frames = frames * hamming_win
+    return frames
+
+def overlap_add(data, frame_size=256, use_window=True):
+    # hamming_win = torch.from_numpy((np.hamming(frame_size * 2)).astype(np.float32)).reshape(1, 1, frame_size * 2).cuda()
+    # if use_window is True:
+    #     data = data * hamming_win
+
+    left_data = data[:, :, :frame_size]
+    left_data = torch.cat([left_data, torch.zeros_like(left_data[:, -1:, :])], dim=1)
+    right_data = data[:, :, frame_size:]
+    right_data = torch.cat([torch.zeros_like(right_data[:, 0:1, :]), right_data], dim=1)
+    # [:,:left_data.size(1), :]
+    overlap_res = (left_data + right_data).reshape(data.size(0), -1)
+    overlap_res[:, frame_size: -frame_size] = overlap_res[:, frame_size: -frame_size] / 2
+    return overlap_res
 
 def expandWindow(data, left, right):
     data = data.detach().cpu().numpy()

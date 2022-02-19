@@ -12,17 +12,17 @@ LOG_STEP: 500                                                                 # 
 
 # server setting
 CUDA_ID: '1'                                                                  # 指定GPU编号
-BATCH_SIZE: 32                                                                # 批处理数
+BATCH_SIZE: 8                                                                # 批处理数
 NUM_WORK: 8                                                                   # 线程数
 
 
 # environment parameter
 project_root_path: '/home/imu_speech1/zhaofei/Fusion_Net'                     # 项目根目录
 
-TRAIN_SPEECH_LST: '/data01/zhaofei/data/Fusion_Net/train_speech.npy'          # 训练集(speech)配置文件名
-TRAIN_MIX_LST: '/data01/zhaofei/data/Fusion_Net/train_mix.npy'                # 训练集(mix)配置文件名
-CV_SPEECH_LST: '/data01/zhaofei/data/Fusion_Net/val_speech.npy'               # 验证集(speech)配置文件名
-CV_MIX_LST: '/data01/zhaofei/data/Fusion_Net/val_mix.npy'                     # 验证集(mix)配置文件名
+TRAIN_SPEECH_LST: '/data01/zhaofei/data/Fusion-Net/train_speech.npy'          # 训练集(speech)配置文件名
+TRAIN_MIX_LST: '/data01/zhaofei/data/Fusion-Net/train_mix.npy'                # 训练集(mix)配置文件名
+CV_SPEECH_LST: '/data01/zhaofei/data/Fusion-Net/val_speech.npy'               # 验证集(speech)配置文件名
+CV_MIX_LST: '/data01/zhaofei/data/Fusion-Net/val_mix.npy'                     # 验证集(mix)配置文件名
 
 OUTPUT_DIR: '/data01/zhaofei/result/'                                         # 输出根目录
 BEST_MODEL: 'best.ckpt'                                                       # 默认最好模型名称

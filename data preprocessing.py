@@ -8,7 +8,7 @@ import tqdm
 import soundfile as sf
 import numpy as np
 from pathlib import Path
-# import librosa
+import librosa
 
 EPSILON = 1e-7
 
@@ -17,7 +17,7 @@ noise_path = '/data01/zhaofei/data/Fusion-Net/noise'
 speech_path = '/data01/zhaofei/data/Voice-Bank/clean_trainset_28spk_wav'
 uncut_mix_path = '/data01/zhaofei/data/Fusion-Net/uncut_mix/'
 train_noisy_path = '/data01/zhaofei/data/Fusion-Net/cut_mix/'
-train_speech_path = '/data01/zhaofei/data/Fusion-Net/cut_speech/'
+train_speech_path = '/data01/zhaofei/data/Fusion_Net/cut_speech/'
 snr_list = [0, 5, 10, 15]
 
 def mix2signal(sig1, sig2, snr):
@@ -65,11 +65,11 @@ mix_lst = list(Path(uncut_mix_path).rglob('*.wav'))
 #         t = t + 1
 ''''''
       
-# 对clean按照16384个样本进行切割
+# 对clean按照16384个样本进行切割  /data01/zhaofei/data/Fusion-Net/cut_speech/p270_034-0.wav
 sum = 0
 for i in tqdm.tqdm(speech_lst):
     speech,_ = sf.read(str(i))
-
+    speech = librosa.resample(speech, _, 16000)
     label = 0
     t = 0
     while (True):

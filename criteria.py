@@ -27,6 +27,22 @@ class stftm_loss(object):
 
         return loss
 
+class Charbonnier_loss:
+    def __init__(self, frame_size=512, frame_shift=256):
+        self.frame_size = frame_size
+        self.frame_shift = frame_shift
+        self.mag_stft = mag_STFT(self.frame_size, self.frame_shift)
+
+    def __call__(self, est, data_info):
+        # est : [est_mag,noisy_phase]
+        # data_info : [mixture,speech,noise,mask,nframe,len_speech]
+        mask = data_info[3].cuda()
+
+        raw_mag = self.mag_stft.transform(data_info[1])[0].permute(0, 2, 1).cuda()
+        est_mag = est[0]
+        loss = torch.sum(torch.sqrt((est_mag - raw_mag) ** 2 + 1e-6)) / torch.sum(mask)
+
+        return loss
 
 class mag_loss(object):
     def __init__(self, frame_size=320, frame_shift=160, loss_type='mae'):
