@@ -13,11 +13,12 @@ from dataloader import BatchDataLoader, SpeechMixDataset
 from utils.Checkpoint import Checkpoint
 from networks.FusionNet import FusionNet
 from utils.progressbar import progressbar as pb
-from utils.util import makedirs, saveYAML
+from utils.util import makedirs, saveYAML, overlap_add
 
 
 def validate(network, eval_loader, weight, *criterion):
     network.eval()
+    # criterion = zip(t_criterion, f_criterion)
     with torch.no_grad():
         cnt = 0.
         accu_eval_loss = 0.0
@@ -25,10 +26,18 @@ def validate(network, eval_loader, weight, *criterion):
         ebar.start()
         for j, batch_eval in enumerate(eval_loader.get_dataloader()):
             features, labels = batch_eval[0].cuda(), batch_eval[1].cuda()
-            outputs = network(features)
+            t_outp, f_outp = network(features)
+            t_loss = 0.
+            f_loss = 0.
             loss = 0.
-            for idx, cri in enumerate(criterion):
-                loss += cri(outputs, batch_eval) * weight[idx]
+
+            t_outp = overlap_add(t_outp)
+            f_outp = overlap_add(f_outp)
+
+            t_loss += criterion[0](t_outp, batch_eval)
+            f_loss += criterion[1](f_outp, batch_eval)
+            loss += (0.85 * t_loss + 0.15 * f_loss)
+                # loss += t_loss
             eval_loss = loss.data.item()
             accu_eval_loss += eval_loss
             cnt += 1.
@@ -94,7 +103,8 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(network.parameters(), lr=config['LR'], amsgrad=True)
     lr_list = [0.0002] * 9 + [0.0001] * 18 + [0.00005] * 9 + [0.00001] * 24
     #  criteria,weight for each criterion
-    criterion = mag_loss(config['WIN_LEN'], config['WIN_OFFSET'], loss_type='mse')
+    t_criterion = Charbonnier_loss(config['WIN_LEN'], config['WIN_OFFSET'], 'time')
+    f_criterion = Charbonnier_loss(config['WIN_LEN'], config['WIN_OFFSET'], 'frequency')
     weight = [1.]
 
     if args.model_name == 'none':
@@ -133,8 +143,12 @@ if __name__ == '__main__':
             optimizer.zero_grad()
             t_outp, f_outp = network(features)
 
-            t_loss = criterion(t_outp, batch_info)
-            f_loss = criterion(t_outp, batch_info)
+            # overlap_add
+            t_outp = overlap_add(t_outp)
+            f_outp = overlap_add(f_outp)
+
+            t_loss = t_criterion(t_outp, batch_info)
+            f_loss = f_criterion(f_outp, batch_info)
             loss = 0.85 * t_loss + 0.15 * f_loss
             loss.backward()
             optimizer.step()
@@ -153,7 +167,7 @@ if __name__ == '__main__':
             if config['USE_CV'] and (i + 1) % config['EVAL_STEP'] == 0:
                 print()
                 avg_train_loss = accu_train_loss / cnt
-                avg_eval_loss = validate(network, cv_batch_dataloader, weight, criterion)
+                avg_eval_loss = validate(network, cv_batch_dataloader, weight, t_criterion, f_criterion)
                 is_best = True if avg_eval_loss < best_loss else False
                 best_loss = avg_eval_loss if is_best else best_loss
                 log.info('Epoch [%d/%d], ( TrainLoss: %.4f | EvalLoss: %.4f )' % (

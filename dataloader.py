@@ -19,14 +19,14 @@ class SpeechMixDataset(Dataset):
         self.mix_lst = np.load(self.mix_path, allow_pickle=True)
 
     def __len__(self):
-        return len(self.speech_lst)
+        return len(self.speech_lst)-1
 
     def __getitem__(self, idx):
-        speech_wav, _ = sf.read(str(self.speech_lst[idx]))
+        speech_wav, _ = sf.read(self.config['SPEECH_PATH']+str(self.speech_lst[idx])+'.wav')
         alpha_pow = 1 / ((np.sqrt(np.sum(speech_wav ** 2)) / ((speech_wav.size) + 1e-7)) + 1e-7)
         speech_wav = speech_wav * alpha_pow
 
-        mix_wav, _ = sf.read(str(self.mix_lst[idx]))
+        mix_wav, _ = sf.read(self.config['MIX_PATH']+str(self.mix_lst[idx])+'.wav')
         alpha_pow = 1 / ((np.sqrt(np.sum(mix_wav ** 2)) / ((mix_wav.size) + 1e-7)) + 1e-7)
         mix_wav = mix_wav * alpha_pow
 

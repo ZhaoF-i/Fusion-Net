@@ -89,6 +89,7 @@ class Encoder(nn.Module):
         self.dense7 = _DenseBlock(5, 64, 64)
 
     def forward(self, input):
+        input = input.unsqueeze(1)
         b1 = self.conv(input)
 
         b1 = self.dense1(self.prelu(self.LN1(self.conv1(b1))))
@@ -134,19 +135,20 @@ class T_Decoder(nn.Module):
 
     def forward(self, encoder_output, skip_connection):
         b6 = self.dense6(self.prelu(self.LN6(self.sp6(encoder_output))))
-        b6 = torch.concat([b6, skip_connection[-1]], -1)
+
+        b6 = torch.cat([b6, skip_connection[-1]], -1)
 
         b5 = self.dense5(self.prelu(self.LN5(self.sp5(b6))))
-        b5 = torch.concat([b5, skip_connection[-2]], -1)
+        b5 = torch.cat([b5, skip_connection[-2]], -1)
 
         b4 = self.dense4(self.prelu(self.LN4(self.sp4(b5))))
-        b4 = torch.concat([b4, skip_connection[-3]], -1)
+        b4 = torch.cat([b4, skip_connection[-3]], -1)
 
         b3 = self.dense3(self.prelu(self.LN3(self.sp3(b4))))
-        b3 = torch.concat([b3, skip_connection[-4]], -1)
+        b3 = torch.cat([b3, skip_connection[-4]], -1)
 
         b2 = self.dense2(self.prelu(self.LN2(self.sp2(b3))))
-        b2 = torch.concat([b2, skip_connection[-5]], -1)
+        b2 = torch.cat([b2, skip_connection[-5]], -1)
 
         b1 = self.dense1(self.prelu(self.LN1(self.sp1(b2))))
 
@@ -187,19 +189,19 @@ class F_Decoder(nn.Module):
 
     def forward(self, encoder_output, skip_connection):
         b6 = self.dense6(self.prelu(self.LN6(self.sp6(encoder_output))))
-        b6 = torch.concat([b6, skip_connection[-1]], -1)
+        b6 = torch.cat([b6, skip_connection[-1]], -1)
 
         b5 = self.dense5(self.prelu(self.LN5(self.sp5(b6))))
-        b5 = torch.concat([b5, skip_connection[-2]], -1)
+        b5 = torch.cat([b5, skip_connection[-2]], -1)
 
         b4 = self.dense4(self.prelu(self.LN4(self.sp4(b5))))
-        b4 = torch.concat([b4, skip_connection[-3]], -1)
+        b4 = torch.cat([b4, skip_connection[-3]], -1)
 
         b3 = self.dense3(self.prelu(self.LN3(self.sp3(b4))))
-        b3 = torch.concat([b3, skip_connection[-4]], -1)
+        b3 = torch.cat([b3, skip_connection[-4]], -1)
 
         b2 = self.dense2(self.prelu(self.LN2(self.sp2(b3))))
-        b2 = torch.concat([b2, skip_connection[-5]], -1)
+        b2 = torch.cat([b2, skip_connection[-5]], -1)
 
         b1 = self.dense1(self.prelu(self.LN1(self.sp1(b2))))
 
@@ -219,11 +221,18 @@ class FusionNet(nn.Module):
         self.encoder = Encoder()
         self.t_decoder = T_Decoder()
         self.f_decoder = F_Decoder()
+        self.conv = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1, 1))
 
     def forward(self, input):
         # 分帧 加窗
         encoder_outp, skip_connection = self.encoder(input)
         t_decoder_outp =  self.t_decoder(encoder_outp, skip_connection)
+        t_decoder_outp = t_decoder_outp.squeeze(1)
         f_decoder_outp =  self.f_decoder(encoder_outp, skip_connection)
+        f_decoder_outp = f_decoder_outp.squeeze(1)
 
         return t_decoder_outp, f_decoder_outp
+        # input = input.unsqueeze(0)
+        # input = self.conv(input)
+        # input = input.squeeze(0)
+        # return input, input

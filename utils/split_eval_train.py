@@ -9,21 +9,24 @@ from pathlib import Path
 if __name__ == '__main__':
     # name_lst=list(Path("/data01/spj/ai_shell4_vad/TRAIN/seg_wav/").rglob('*.wav'))
     speech_path = '/data01/zhaofei/data/Fusion-Net/cut_speech/'
-    npy_path = '/data01/zhaofei/data/Fusion-Net/'
+    npy_path = '/data01/zhaofei/data/Fusion-Net/npy/'
     mix_lst=list(Path("/data01/zhaofei/data/Fusion-Net/cut_mix/").rglob('*.wav'))
     random.shuffle(mix_lst)
 
     len_lst=len(mix_lst)
+
+    noisy_lst = []
     speech_lst = []
 
     for i in tqdm(mix_lst):
-        speech_name = speech_path + (i.stem).split('&')[0]+ '-' + (i.stem).split('-')[1]+'.wav'
+        noisy_lst.append(i.stem)
+        speech_name = (i.stem).split('&')[0]+ '-' + (i.stem).split('-')[1]
         speech_lst.append(speech_name)
         # a,_ = sf.read(speech_name)
     # print("over")
 
-    train_mix_lst = mix_lst[:int(0.95*len_lst)]
-    eval_mix_lst = mix_lst[int(0.95 * len_lst):]
+    train_mix_lst = noisy_lst[:int(0.95*len_lst)]
+    eval_mix_lst = noisy_lst[int(0.95 * len_lst):]
     train_speech_lst = speech_lst[:int(0.95*len_lst)]
     eval_speech_lst = speech_lst[int(0.9*len_lst):]
 

@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from utils.stft_istft_real_imag_hamming import STFT as complex_STFT
 from utils.stft_istft import STFT as mag_STFT
 
@@ -28,19 +29,33 @@ class stftm_loss(object):
         return loss
 
 class Charbonnier_loss:
-    def __init__(self, frame_size=512, frame_shift=256):
+    def __init__(self, frame_size=512, frame_shift=256, feature_type='time'):
+        """
+
+        :param feature_type: 包括 时域和频域
+        """
         self.frame_size = frame_size
         self.frame_shift = frame_shift
+        self.feature_type = feature_type
         self.mag_stft = mag_STFT(self.frame_size, self.frame_shift)
 
     def __call__(self, est, data_info):
         # est : [est_mag,noisy_phase]
         # data_info : [mixture,speech,noise,mask,nframe,len_speech]
-        mask = data_info[3].cuda()
+        if self.feature_type == 'time':
+            mask = np.ones((est.size(0), est.size(1)), dtype=np.float32)
+            mask = torch.Tensor(mask).cuda()
 
-        raw_mag = self.mag_stft.transform(data_info[1])[0].permute(0, 2, 1).cuda()
-        est_mag = est[0]
-        loss = torch.sum(torch.sqrt((est_mag - raw_mag) ** 2 + 1e-6)) / torch.sum(mask)
+            raw_mag = data_info[1].cuda()
+            est_mag = est
+            loss = torch.sum(torch.sqrt((est_mag - raw_mag) ** 2 + 1e-6)) / torch.sum(mask)
+        else:
+            raw_mag = self.mag_stft.transform(data_info[1])[0].permute(0, 2, 1).cuda()
+            est_mag = self.mag_stft.transform(est.cpu())[0].permute(0, 2, 1).cuda()
+
+            mask = torch.ones((est_mag.size(0), est_mag.size(1), est_mag.size(2))).cuda()
+
+            loss = torch.sum(torch.sqrt((est_mag - raw_mag) ** 2 + 1e-6)) / torch.sum(mask)
 
         return loss
 

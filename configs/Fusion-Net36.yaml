@@ -8,17 +8,16 @@ MAX_EPOCH: 60                                                                 # 
 EPSILON: 0.0000001                                                            #
 USE_CV: True                                                                  # [True,False]，是否使用验证集
 EVAL_STEP: 50000                                                               # 多少个batch进行一次CV
-#EVAL_STEP: 1                                                               # 多少个batch进行一次CV
 LOG_STEP: 500                                                                 # 多少个batch输出一次信息
 
 # server setting
-CUDA_ID: '0'                                                                  # 指定GPU编号
-BATCH_SIZE: 16                                                                # 批处理数
+CUDA_ID: '1'                                                                  # 指定GPU编号
+BATCH_SIZE: 4                                                                # 批处理数
 NUM_WORK: 8                                                                   # 线程数
 
 
 # environment parameter
-project_root_path: '/home/imu_speech1/zhaofei/Fusion_Net'                     # 项目根目录
+project_root_path: '/home/ZhangXueLiang/ZhaoFei/PycharmProject/Fusion-Net'    # 项目根目录
 
 SPEECH_PATH: '/data01/zhaofei/data/Fusion-Net/cut_speech/'
 MIX_PATH: '/data01/zhaofei/data/Fusion-Net/cut_mix/'
