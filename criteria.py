@@ -43,8 +43,7 @@ class Charbonnier_loss:
         # est : [est_mag,noisy_phase]
         # data_info : [mixture,speech,noise,mask,nframe,len_speech]
         if self.feature_type == 'time':
-            mask = np.ones((est.size(0), est.size(1)), dtype=np.float32)
-            mask = torch.Tensor(mask).cuda()
+            mask = data_info[2].cuda()
 
             raw_mag = data_info[1].cuda()
             est_mag = est
@@ -53,7 +52,7 @@ class Charbonnier_loss:
             raw_mag = self.mag_stft.transform(data_info[1])[0].permute(0, 2, 1).cuda()
             est_mag = self.mag_stft.transform(est.cpu())[0].permute(0, 2, 1).cuda()
 
-            mask = torch.ones((est_mag.size(0), est_mag.size(1), est_mag.size(2))).cuda()
+            mask = data_info[3].cuda()
 
             loss = torch.sum(torch.sqrt((est_mag - raw_mag) ** 2 + 1e-6)) / torch.sum(mask)
 

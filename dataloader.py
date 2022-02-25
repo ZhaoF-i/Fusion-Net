@@ -2,7 +2,7 @@ import numpy as np
 import struct
 import soundfile as sf
 import os
-
+import torch
 from torch.nn.utils.rnn import *
 from torch.autograd.variable import *
 from torch.utils.data import Dataset, DataLoader
@@ -30,8 +30,13 @@ class SpeechMixDataset(Dataset):
         alpha_pow = 1 / ((np.sqrt(np.sum(mix_wav ** 2)) / ((mix_wav.size) + 1e-7)) + 1e-7)
         mix_wav = mix_wav * alpha_pow
 
+        t_mask = torch.ones(len(mix_wav), dtype=torch.float32)
+        f_mask = torch.ones((len(mix_wav)//self.config['FFT_SIZE']-1, self.config['FFT_SIZE']+1), dtype=torch.float32)
+
         sample = (Variable(torch.FloatTensor(speech_wav.astype('float32'))),
-                  Variable(torch.FloatTensor(mix_wav.astype('float32')))
+                  Variable(torch.FloatTensor(mix_wav.astype('float32'))),
+                  t_mask,
+                  f_mask
                   )
 
         return sample
@@ -48,9 +53,11 @@ class BatchDataLoader(object):
     @staticmethod
     def collate_fn(batch):
         batch.sort(key=lambda x: x[0].size()[0], reverse=True)
-        speech, mix = zip(*batch)
+        speech, mix, t_mask, f_mask = zip(*batch)
         speech = pad_sequence(speech, batch_first=True)
         mix = pad_sequence(mix, batch_first=True)
         mix = convert_to_frame(mix, hop_size=256, use_window=False)
+        t_mask = pad_sequence(t_mask, batch_first=True)
+        f_mask = pad_sequence(f_mask, batch_first=True)
 
-        return [mix, speech]
+        return [mix, speech, t_mask, f_mask]
