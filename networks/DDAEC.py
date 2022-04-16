@@ -148,8 +148,8 @@ class NET_Wrapper(nn.Module):
 
 
 if __name__ == '__main__':
-    input = Variable(torch.FloatTensor(torch.rand(1, 16000))).cuda(0)
-    net = NET_Wrapper(320, 160).cuda()
+    input = Variable(torch.FloatTensor(torch.rand(1, 16000))).cuda(1)
+    net = NET_Wrapper(320, 160).cuda(1)
     macs, params = profile(net, inputs=(input,))
     macs, params = clever_format([macs, params], "%.3f")
     print(macs)
