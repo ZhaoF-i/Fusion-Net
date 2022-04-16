@@ -20,8 +20,6 @@ def mix2signal(sig1, sig2, snr):
     return alpha
 
 
-
-
 ## noise + speech
 def mix_speech(speech_lst, noise_lst, uncut_mix_path):
     for i in tqdm.tqdm(speech_lst):

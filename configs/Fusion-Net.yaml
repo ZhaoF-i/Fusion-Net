@@ -12,8 +12,8 @@ EVAL_STEP: 80000                                                               #
 LOG_STEP: 500                                                                 # 多少个batch输出一次信息
 
 # server setting
-CUDA_ID: '0'                                                                  # 指定GPU编号
-BATCH_SIZE: 10                                                                # 批处理数
+CUDA_ID: '1'                                                                  # 指定GPU编号
+BATCH_SIZE: 12                                                                # 批处理数
 NUM_WORK: 16                                                                   # 线程数
 
 
@@ -28,7 +28,7 @@ TRAIN_MIX_LST: '/data01/zhaofei/data/Fusion-Net/npy/train_mix.npy'              
 CV_SPEECH_LST: '/data01/zhaofei/data/Fusion-Net/npy/val_speech.npy'               # 验证集(speech)配置文件名
 CV_MIX_LST: '/data01/zhaofei/data/Fusion-Net/npy/val_mix.npy'                     # 验证集(mix)配置文件名
 
-OUTPUT_DIR: '/data02/zhaofei/result/'                                         # 输出根目录
+OUTPUT_DIR: '/data01/zhaofei/result/'                                         # 输出根目录
 BEST_MODEL: 'best.ckpt'                                                       # 默认最好模型名称
 MID_MODEL: 'val.ckpt'                                                         # 默认中间模型名称
 SAVE_BEST_ONLY: False                                                         # [True,False]:[仅保存最好的模型,保存中间模型]
