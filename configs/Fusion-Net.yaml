@@ -12,7 +12,7 @@ EVAL_STEP: 80000                                                               #
 LOG_STEP: 500                                                                 # 多少个batch输出一次信息
 
 # server setting
-CUDA_ID: '1'                                                                  # 指定GPU编号
+CUDA_ID: '0'                                                                  # 指定GPU编号
 BATCH_SIZE: 12                                                                # 批处理数
 NUM_WORK: 16                                                                   # 线程数
 
